@@ -1,0 +1,61 @@
+= GraphQL server benchmark
+
+Benchmark of a simple https://graphql.org/[GraphQL] server on popular spec implementations.
+
+== Lastest results
+
+TBD
+
+== The benchmark
+
+The benchmark consists in a simple blogging GraphQL server:
+
+- reading rows (posts and comments) from a Postgres database
+- fetching json (author profiles) from a remote HTTP server
+
+image::graphql-server-benchmark.svg[GraphQL Server Banchmark]
+
+[source]
+.Schema file
+----
+type Post {
+    title: String
+    content: String
+    author: Author
+    comments: [Comment]
+}
+
+type Comment {
+    content: String
+    author: Author
+}
+
+type Author {
+    id: String
+    firstName: String
+    lastName: String
+}
+
+type Query {
+    allPosts(authorId: String!): [Post]
+}
+----
+
+== How we run it
+
+TBD
+
+* describe the perf lab environment
+
+== Contributing
+
+TBD
+
+* where to add code
+* script to build it (or producer Docker image?)
+* script ro run it (or run Docker image?)
+* how to test the impl (provide a docker compose file to run locally)
+
+== License
+
+Apache 2.0 License

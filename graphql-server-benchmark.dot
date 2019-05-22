@@ -1,0 +1,12 @@
+strict digraph {
+    rankdir=LR;
+    splines="line";
+    injector [label="Injector" shape="ellipse" color="#585858" style="filled" fillcolor="#848484" fontcolor="white"]
+    server [label="GraphQL server" shape="polygon" color="#585858" style="rounded,filled" fillcolor="#782b90" fontcolor="white"]
+    backend [label="Backend" shape="polygon" color="#585858" style="rounded,filled" fillcolor="#f26522" fontcolor="white"]
+    postgres [label="Postgres"  shape=cylinder color="#585858" style="filled" fillcolor="#008bb9" fontcolor="white"]
+    injector -> server [label="HTTP"]
+    server -> postgres
+    server -> backend [label="HTTP"]
+}
+

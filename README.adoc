@@ -41,20 +41,39 @@ type Query {
 }
 ----
 
-== How we run it
+== Guidelines
 
-TBD
+The server may:
+- cache GraphQL query parsing result
+- cache author profiles per-query
 
-* describe the perf lab environment
+The server must not:
+- cache all posts and comments
+- cache all author profiles
+
+== Test environment
+
+- 3 servers Intel Xeon e5-2637v3 128G RAM (injector, server, backend)
+- 1 server Intel Xeon e5-2637v3 256G RAM (postgres)
+- 10 GbE switch
 
 == Contributing
 
-TBD
+You can add an implementation in the link:implementations/[implementations] directory.
 
-* where to add code
-* script to build it (or producer Docker image?)
-* script ro run it (or run Docker image?)
-* how to test the impl (provide a docker compose file to run locally)
+Make sure the name describes the software stack.
+For example, _java_vertx_graphql-java_ means the implementation:
+
+* is written in the Java language
+* uses Vert.x as the web server
+* uses GraphQL-Java engine
+
+Each implementation must provide a `Dockerfile` (build and run).
+
+For testing purposes, you can build an run with Docker:
+
+* the link:backend/[backend] server
+* the link:postgres/[postgres] database
 
 == License
 

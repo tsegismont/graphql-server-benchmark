@@ -77,4 +77,4 @@ For testing purposes, you can build an run with Docker:
 
 == License
 
-Apache 2.0 License
+link:LICENSE[Apache 2.0 License]

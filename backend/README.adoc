@@ -33,10 +33,11 @@ Which returns:
 [source,bash]
 ----
 HTTP/1.1 200 OK
-content-length: 51
+content-length: 102
 content-type: application/json
 
 {
+    "bio": "Small controls avoids most enlightenments.",
     "firstName": "William",
     "id": 3,
     "lastName": "Raymond"

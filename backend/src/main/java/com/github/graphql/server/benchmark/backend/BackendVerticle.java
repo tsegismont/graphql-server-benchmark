@@ -54,14 +54,15 @@ public class BackendVerticle extends AbstractVerticle {
   }
 
   private void loadData() {
-    Buffer csv = vertx.fileSystem().readFileBlocking("authors.csv");
+    Buffer csv = vertx.fileSystem().readFileBlocking("authors.data");
     RecordParser parser = RecordParser.newDelimited("\n");
     parser.handler(line -> {
-      String[] split = line.toString().split(",");
+      String[] split = line.toString().split("\\|");
       JsonObject author = new JsonObject()
         .put("id", Integer.valueOf(split[0].trim()))
         .put("firstName", split[1].trim())
-        .put("lastName", split[2].trim());
+        .put("lastName", split[2].trim())
+        .put("bio", split[3].trim());
       authors.put(author.getInteger("id"), author.toBuffer());
     });
     parser.handle(csv);

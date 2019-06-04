@@ -4,14 +4,14 @@ Benchmark of a simple https://graphql.org/[GraphQL] server on popular spec imple
 
 == Lastest results
 
-TBD
+_Coming soon_ ...
 
 == The benchmark
 
 The benchmark consists in a simple blogging GraphQL server:
 
-- reading rows (posts and comments) from a Postgres database
-- fetching json (author profiles) from a remote HTTP server
+* fetching json (author profiles) from a remote HTTP server
+* reading rows (posts and comments) from a Postgres database
 
 image::graphql-server-benchmark.svg[GraphQL Server Banchmark]
 
@@ -39,25 +39,34 @@ type Author {
 }
 
 type Query {
+    posts: [Post!]
     author(id: Int!): Author
 }
 ----
 
+The Postgres database is setup with:
+
+* 2 posts per author
+* 2 comments per post:
+** 1 comment from another author
+** 1 comment (reply) from the post author
+
 == Guidelines
 
 The server may:
-- cache GraphQL query parsing result
-- cache author profiles per-query
+
+* cache GraphQL query parsing result
+* cache author profiles per-query
 
 The server must not:
-- cache all posts and comments
-- cache all author profiles
+* cache all posts and comments
+* cache all author profiles
 
 == Test environment
 
-- 3 servers Intel Xeon e5-2637v3 128G RAM (injector, server, backend)
-- 1 server Intel Xeon e5-2637v3 256G RAM (postgres)
-- 10 GbE switch
+* 3 servers Intel Xeon e5-2637v3 128G RAM (injector, server, backend)
+* 1 server Intel Xeon e5-2637v3 256G RAM (postgres)
+* 10 GbE switch
 
 == Contributing
 

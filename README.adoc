@@ -59,6 +59,7 @@ The server may:
 * cache author profiles per-query
 
 The server must not:
+
 * cache all posts and comments
 * cache all author profiles
 

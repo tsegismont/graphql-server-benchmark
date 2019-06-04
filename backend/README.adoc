@@ -1,0 +1,44 @@
+= Backend
+
+The backend is an HTTP server for author data.
+
+== Running
+
+For testing purposes, you may run it with Docker:
+
+[source,bash]
+----
+docker build -t graphql-server-benchmark/backend .
+docker run -it -p 8181:8181 graphql-server-benchmark/backend
+----
+
+Or, if you have a JDK8 (or JDK11) and Maven on your machine:
+
+[source,bash]
+----
+mvn clean vertx:run
+----
+
+== Testing
+
+Author data can be retrieved with `HTTPie` or `curl`:
+
+[source,bash]
+----
+http :8181/author/3
+----
+
+Which returns:
+
+[source,bash]
+----
+HTTP/1.1 200 OK
+content-length: 51
+content-type: application/json
+
+{
+    "firstName": "William",
+    "id": 3,
+    "lastName": "Raymond"
+}
+----

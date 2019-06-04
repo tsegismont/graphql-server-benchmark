@@ -1,0 +1,13 @@
+= Postgres
+
+The Postgres databases contains posts and comments data.
+
+== Running
+
+For testing purposes, you may run it with Docker:
+
+[source,bash]
+----
+docker build -t graphql-server-benchmark/postgres .
+docker run -it graphql-server-benchmark/postgres
+----

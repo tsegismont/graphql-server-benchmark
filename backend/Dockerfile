@@ -1,5 +1,5 @@
-FROM maven:3.6.1-jdk-11-slim
-WORKDIR /vertx
+FROM maven:3-jdk-11-slim
+WORKDIR /backend
 COPY src src
 COPY pom.xml pom.xml
 RUN mvn package -q

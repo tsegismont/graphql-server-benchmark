@@ -19,25 +19,27 @@ image::graphql-server-benchmark.svg[GraphQL Server Banchmark]
 .Schema file
 ----
 type Post {
-    title: String
-    content: String
-    author: Author
-    comments: [Comment]
+    author: Author!
+    title: String!
+    content: String!
+    comments: [Comment!]
 }
 
 type Comment {
-    content: String
-    author: Author
+    id: ID!
+    author: Author!
+    content: String!
 }
 
 type Author {
-    id: String
-    firstName: String
-    lastName: String
+    firstName: String!
+    lastName: String!
+    bio: String!
+    posts: [Post!]
 }
 
 type Query {
-    allPosts(authorId: String!): [Post]
+    author(id: Int!): Author
 }
 ----
 

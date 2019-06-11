@@ -9,7 +9,7 @@ For testing purposes, you may run it with Docker:
 [source,bash]
 ----
 docker build -t graphql-server-benchmark/vertx-graphql-java .
-docker run -it -p 8080:8080 graphql-server-benchmark/vertx-graphql-java
+docker run --network host -it graphql-server-benchmark/vertx-graphql-java
 ----
 
 Or, if you have a JDK8 (or JDK11) and Maven on your machine:

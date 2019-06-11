@@ -9,5 +9,5 @@ For testing purposes, you may run it with Docker:
 [source,bash]
 ----
 docker build -t graphql-server-benchmark/postgres .
-docker run -it graphql-server-benchmark/postgres
+docker run --network host -it graphql-server-benchmark/postgres
 ----

@@ -1,0 +1,37 @@
+query ($authordId: Int!) {
+  author(id: $authordId) {
+    firstName
+    lastName
+    posts {
+      title
+      content
+      comments {
+        author {
+          firstName
+          lastName
+        }
+        content
+      }
+    }
+  }
+}
+
+
+query {
+  posts {
+    author {
+      firstName
+      lastName
+    }
+    title
+    content
+    comments {
+      author {
+        firstName
+        lastName
+      }
+      content
+    }
+  }
+}
+

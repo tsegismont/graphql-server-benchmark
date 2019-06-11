@@ -1,0 +1,11 @@
+{
+  "port": 8080,
+  "backend": {
+    "host": "localhost",
+    "port": 8181
+  },
+  "postgres": {
+    "host": "localhost",
+    "port": 5432
+  }
+}

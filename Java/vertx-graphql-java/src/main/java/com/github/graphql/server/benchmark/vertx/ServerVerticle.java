@@ -16,6 +16,8 @@
 
 package com.github.graphql.server.benchmark.vertx;
 
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import graphql.GraphQL;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -23,10 +25,12 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.*;
 import io.reactiverse.pgclient.*;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -38,7 +42,7 @@ import io.vertx.ext.web.handler.graphql.GraphiQLOptions;
 import io.vertx.ext.web.handler.graphql.VertxPropertyDataFetcher;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 import java.util.stream.Collector;
 
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
@@ -46,11 +50,15 @@ import static java.util.stream.Collectors.*;
 
 public class ServerVerticle extends AbstractVerticle {
 
+  private Executor contextExecutor;
   private WebClient webClient;
   private PgPool pgClient;
 
   @Override
   public void start() {
+    Context context = vertx.getOrCreateContext();
+    contextExecutor = cmd -> context.runOnContext(v -> cmd.run());
+
     JsonObject config = config();
     int port = config.getInteger("port", 8080);
 
@@ -111,28 +119,28 @@ public class ServerVerticle extends AbstractVerticle {
       })
       .type("Query", builder -> {
         return builder
-          .dataFetcher("posts", env -> toCompletionStage(findPosts(null, env)))
-          .dataFetcher("author", env -> toCompletionStage(findAuthor(env.getArgument("id"), env)));
+          .dataFetcher("posts", env -> toCompletableFuture(findPosts(null, env)))
+          .dataFetcher("author", env -> toCompletableFuture(findAuthor(env.getArgument("id"), env)));
       }).type("Post", builder -> {
         return builder
           .dataFetcher("author", env -> {
             JsonObject post = env.getSource();
-            return toCompletionStage(findAuthor(post.getInteger("author_id"), env));
+            return toCompletableFuture(findAuthor(post.getInteger("author_id"), env));
           }).dataFetcher("comments", env -> {
             JsonObject post = env.getSource();
-            return toCompletionStage(findComments(post.getInteger("id"), env));
+            return toCompletableFuture(findComments(post.getInteger("id"), env));
           });
       }).type("Author", builder -> {
         return builder
           .dataFetcher("posts", env -> {
             JsonObject author = env.getSource();
-            return toCompletionStage(findPosts(author.getInteger("id"), env));
+            return toCompletableFuture(findPosts(author.getInteger("id"), env));
           });
       }).type("Comment", builder -> {
         return builder
           .dataFetcher("author", env -> {
             JsonObject comment = env.getSource();
-            return toCompletionStage(findAuthor(comment.getInteger("author_id"), env));
+            return toCompletableFuture(findAuthor(comment.getInteger("author_id"), env));
           });
       })
       .build();
@@ -144,6 +152,33 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<JsonObject> findAuthor(Integer authorId, DataFetchingEnvironment env) {
+    Future<JsonObject> future = Future.future();
+
+    AsyncLoadingCache<Integer, JsonObject> authorCache = getAuthorCache(env);
+    authorCache.get(authorId).whenComplete((jsonObject, throwable) -> {
+      if (throwable == null) {
+        future.complete(jsonObject);
+      } else {
+        future.fail(throwable);
+      }
+    });
+
+    return future;
+  }
+
+  private AsyncLoadingCache<Integer, JsonObject> getAuthorCache(DataFetchingEnvironment env) {
+    RoutingContext rc = env.getContext();
+    AsyncLoadingCache<Integer, JsonObject> authorCache = rc.get("authorCache");
+    if (authorCache == null) {
+      authorCache = Caffeine.newBuilder()
+        .executor(contextExecutor)
+        .buildAsync((key, executor) -> toCompletableFuture(loadAuthor(key)));
+      rc.put("authorCache", authorCache);
+    }
+    return authorCache;
+  }
+
+  private Future<JsonObject> loadAuthor(Integer authorId) {
     Future<HttpResponse<JsonObject>> future = Future.future();
 
     webClient.get("/author/" + authorId)
@@ -186,7 +221,7 @@ public class ServerVerticle extends AbstractVerticle {
       .put("content", row.getString("content"));
   }
 
-  private <T> CompletionStage<T> toCompletionStage(Future<T> future) {
+  private <T> CompletableFuture<T> toCompletableFuture(Future<T> future) {
     CompletableFuture<T> cf = new CompletableFuture<>();
     future.setHandler(ar -> {
       if (ar.succeeded()) {

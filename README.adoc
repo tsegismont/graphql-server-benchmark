@@ -26,7 +26,6 @@ type Post {
 }
 
 type Comment {
-    id: ID!
     author: Author!
     content: String!
 }
@@ -74,7 +73,7 @@ The server must not:
 You can add an implementation in the link:implementations/[implementations] directory.
 
 Make sure the name describes the software stack.
-For example, _java_vertx_graphql-java_ means the implementation:
+For example, _Java/vertx-graphql-java_ means the implementation:
 
 * is written in the Java language
 * uses Vert.x as the web server

@@ -27,6 +27,7 @@ type Post {
 
 type Comment {
     author: Author!
+    post: Post!
     content: String!
 }
 
@@ -35,6 +36,7 @@ type Author {
     lastName: String!
     bio: String!
     posts: [Post!]
+    comments: [Comment!]
 }
 
 type Query {
@@ -42,6 +44,8 @@ type Query {
     author(id: Int!): Author
 }
 ----
+
+The backend HTTP service is setup with 10 authors.
 
 The Postgres database is setup with:
 

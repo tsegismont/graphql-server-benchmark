@@ -81,7 +81,12 @@ public class ServerVerticle extends AbstractVerticle {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader((keys, env) -> {
           return toCompletableFuture(findComments(keys, env));
         });
-        return new DataLoaderRegistry().register("comment", commentDataLoader);
+        DataLoader<Integer, JsonObject> postDataLoader = DataLoader.newMappedDataLoader((keys, env) -> {
+          return toCompletableFuture(findPosts(keys, env));
+        });
+        return new DataLoaderRegistry()
+          .register("comment", commentDataLoader)
+          .register("post", postDataLoader);
       });
 
     Router router = Router.router(vertx);
@@ -150,12 +155,19 @@ public class ServerVerticle extends AbstractVerticle {
           .dataFetcher("posts", env -> {
             JsonObject author = env.getSource();
             return toCompletableFuture(findPosts(author.getInteger("id"), env));
+          }).dataFetcher("comments", env -> {
+            JsonObject author = env.getSource();
+            return toCompletableFuture(findComments(author.getInteger("id"), env));
           });
       }).type("Comment", builder -> {
         return builder
           .dataFetcher("author", env -> {
             JsonObject comment = env.getSource();
             return toCompletableFuture(findAuthor(comment.getInteger("author_id"), env));
+          }).dataFetcher("post", env -> {
+            JsonObject comment = env.getSource();
+            DataLoader<Integer, JsonObject> post = env.getDataLoader("post");
+            return post.load(comment.getInteger("post_id"), env);
           });
       })
       .build();
@@ -219,6 +231,13 @@ public class ServerVerticle extends AbstractVerticle {
     return future.map(PgResult::value);
   }
 
+  private Future<Map<Integer, JsonObject>> findPosts(Set<Integer> ids, BatchLoaderEnvironment env) {
+    Future<PgResult<Map<Integer, JsonObject>>> future = Future.future();
+    Collector<Row, ?, Map<Integer, JsonObject>> collector = toMap(row -> row.getInteger("id"), this::toPost);
+    pgClient.preparedQuery("select * from posts where id = any($1)", Tuple.of(ids.toArray(new Integer[0])), collector, future);
+    return future.map(PgResult::value);
+  }
+
   private JsonObject toPost(Row row) {
     return new JsonObject()
       .put("id", row.getInteger("id"))
@@ -237,8 +256,16 @@ public class ServerVerticle extends AbstractVerticle {
     return future.map(PgResult::value);
   }
 
+  private Future<JsonArray> findComments(Integer authorId, DataFetchingEnvironment env) {
+    Future<PgResult<JsonArray>> future = Future.future();
+    Collector<Row, ?, JsonArray> collector = mapping(this::toComment, collectingAndThen(toList(), JsonArray::new));
+    pgClient.preparedQuery("select * from comments where author_id = $1", Tuple.of(authorId), collector, future);
+    return future.map(PgResult::value);
+  }
+
   private JsonObject toComment(Row row) {
     return new JsonObject()
+      .put("post_id", row.getInteger("post_id"))
       .put("author_id", row.getInteger("author_id"))
       .put("content", row.getString("content"));
   }

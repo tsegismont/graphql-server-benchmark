@@ -1,0 +1,77 @@
+== All posts
+
+=== For desktop
+
+----
+{
+  posts {
+    author {
+      firstName
+      lastName
+    }
+    title
+    content
+    comments {
+      author {
+        firstName
+        lastName
+      }
+      content
+    }
+  }
+}
+----
+
+=== For mobile
+
+----
+{
+  posts {
+    author {
+      firstName
+      lastName
+    }
+    title
+    content
+  }
+}
+----
+
+== Author profile
+
+=== For desktop
+
+----
+query ($authordId: Int!) {
+  author(id: $authordId) {
+    firstName
+    lastName
+    bio
+    posts {
+      title
+      content
+    }
+    comments {
+      post {
+       title
+      }
+      content
+    }
+  }
+}
+----
+
+=== For mobile
+
+----
+query ($authordId: Int!) {
+  author(id: $authordId) {
+    firstName
+    lastName
+    bio
+    posts {
+      title
+    }
+  }
+}
+----

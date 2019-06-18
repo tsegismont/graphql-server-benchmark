@@ -54,12 +54,15 @@ The Postgres database is setup with:
 ** 1 comment from another author
 ** 1 comment (reply) from the post author
 
+Each framework is tested with different link:queries.adoc[queries].
+
 == Guidelines
 
 The server may:
 
 * cache GraphQL query parsing result
 * cache author profiles per-query
+* use HTTP and Postgres pipelining
 
 The server must not:
 
@@ -68,8 +71,8 @@ The server must not:
 
 == Test environment
 
-* 3 servers Intel Xeon e5-2637v3 128G RAM (injector, server, backend)
-* 1 server Intel Xeon e5-2637v3 256G RAM (postgres)
+* 3 quad-core servers Intel Xeon e5-2637v3 128G RAM (injector, server, backend)
+* 1 quad-core server Intel Xeon e5-2637v3 256G RAM (postgres)
 * 10 GbE switch
 
 == Contributing

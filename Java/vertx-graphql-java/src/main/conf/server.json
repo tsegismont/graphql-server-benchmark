@@ -2,10 +2,12 @@
   "port": 8080,
   "backend": {
     "host": "localhost",
-    "port": 8181
+    "port": 8181,
+    "poolSize": 32
   },
   "postgres": {
     "host": "localhost",
-    "port": 5432
+    "port": 5432,
+    "poolSize": 4
   }
 }

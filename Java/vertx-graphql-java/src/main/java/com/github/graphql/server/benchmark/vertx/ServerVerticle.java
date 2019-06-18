@@ -101,10 +101,13 @@ public class ServerVerticle extends AbstractVerticle {
     JsonObject backend = config.getJsonObject("backend", new JsonObject());
     String backendHost = backend.getString("host", "localhost");
     int backendPort = backend.getInteger("port", 8181);
+    int maxSize = backend.getInteger("poolSize", 32);
 
     WebClientOptions webClientOptions = new WebClientOptions()
       .setDefaultHost(backendHost)
-      .setDefaultPort(backendPort);
+      .setDefaultPort(backendPort)
+      .setMaxPoolSize(maxSize)
+      .setPipelining(true);
     webClient = WebClient.create(vertx, webClientOptions);
   }
 
@@ -112,6 +115,7 @@ public class ServerVerticle extends AbstractVerticle {
     JsonObject postgres = config.getJsonObject("postgres", new JsonObject());
     String postgresHost = postgres.getString("host", "localhost");
     int postgresPort = postgres.getInteger("port", 5432);
+    int maxSize = postgres.getInteger("poolSize", 4);
 
     PgPoolOptions pgPoolOptions = new PgPoolOptions()
       .setHost(postgresHost)
@@ -119,7 +123,8 @@ public class ServerVerticle extends AbstractVerticle {
       .setUser("graphql")
       .setPassword("graphql")
       .setDatabase("blogdb")
-      .setCachePreparedStatements(true);
+      .setCachePreparedStatements(true)
+      .setMaxSize(maxSize);
     pgClient = PgClient.pool(vertx, pgPoolOptions);
   }
 

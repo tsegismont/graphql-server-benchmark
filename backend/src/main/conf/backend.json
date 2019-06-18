@@ -1,4 +1,5 @@
 {
   "port": 8181,
-  "delay": 10
+  "delay": 2,
+  "burnCpuMicros": 500
 }

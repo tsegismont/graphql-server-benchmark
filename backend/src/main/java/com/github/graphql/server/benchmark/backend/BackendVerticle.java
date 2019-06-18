@@ -30,6 +30,8 @@ public class BackendVerticle extends AbstractVerticle {
 
   private LocalMap<Integer, Buffer> authors;
   private long delay;
+  private int burnCpuMicros;
+  private long iterationsForOneMilli;
 
   @Override
   public void start() throws Exception {
@@ -37,7 +39,11 @@ public class BackendVerticle extends AbstractVerticle {
 
     JsonObject config = config();
     int port = config.getInteger("port", 8181);
-    delay = config.getLong("delay", 10L);
+    delay = config.getLong("delay", 2L);
+    burnCpuMicros = config.getInteger("burnCpuMicros", 500);
+    if (burnCpuMicros > 0) {
+      iterationsForOneMilli = Utils.calibrateBlackhole();
+    }
 
     loadData();
 
@@ -70,6 +76,11 @@ public class BackendVerticle extends AbstractVerticle {
 
   private void delayResponse(RoutingContext rc) {
     vertx.setTimer(delay, l -> rc.next());
+    if (burnCpuMicros > 0) {
+      final long targetDelay = Utils.ONE_MICRO_IN_NANO * burnCpuMicros;
+      long numIters = Math.round(targetDelay * 1.0 * iterationsForOneMilli / Utils.ONE_MILLI_IN_NANO);
+      Utils.blackholeCpu(numIters);
+    }
   }
 
   private void getAuthor(RoutingContext rc) {

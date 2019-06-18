@@ -224,7 +224,7 @@ public class ServerVerticle extends AbstractVerticle {
     Future<PgResult<JsonArray>> future = Future.future();
     Collector<Row, ?, JsonArray> collector = mapping(this::toPost, collectingAndThen(toList(), JsonArray::new));
     if (postId == null) {
-      pgClient.query("select * from posts", collector, future);
+      pgClient.preparedQuery("select * from posts", collector, future);
     } else {
       pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(postId), collector, future);
     }

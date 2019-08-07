@@ -20,7 +20,6 @@ import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import graphql.GraphQL;
-import graphql.execution.instrumentation.dataloader.DataLoaderDispatcherInstrumentation;
 import graphql.execution.preparsed.PreparsedDocumentEntry;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
@@ -183,7 +182,6 @@ public class ServerVerticle extends AbstractVerticle {
     Cache<String, PreparsedDocumentEntry> queryCache = Caffeine.newBuilder().build();
 
     return GraphQL.newGraphQL(graphQLSchema).preparsedDocumentProvider(queryCache::get)
-      .instrumentation(new DataLoaderDispatcherInstrumentation())
       .build();
   }
 
@@ -225,13 +223,13 @@ public class ServerVerticle extends AbstractVerticle {
     return future.map(HttpResponse::body);
   }
 
-  private Future<JsonArray> findPosts(Integer postId, DataFetchingEnvironment env) {
+  private Future<JsonArray> findPosts(Integer authorId, DataFetchingEnvironment env) {
     Future<PgResult<JsonArray>> future = Future.future();
     Collector<Row, ?, JsonArray> collector = mapping(this::toPost, collectingAndThen(toList(), JsonArray::new));
-    if (postId == null) {
+    if (authorId == null) {
       pgClient.preparedQuery("select * from posts", collector, future);
     } else {
-      pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(postId), collector, future);
+      pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(authorId), collector, future);
     }
     return future.map(PgResult::value);
   }

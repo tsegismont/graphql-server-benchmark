@@ -17,16 +17,25 @@
 package com.github.graphql.server.benchmark.springboot;
 
 import com.coxautodev.graphql.tools.GraphQLResolver;
+import graphql.schema.DataFetchingEnvironment;
+import org.dataloader.DataLoader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
 
 @Component
 public class CommentResolver implements GraphQLResolver<Comment> {
 
-  public Post getPost(Comment comment) {
-    return null;
+  @Autowired
+  AuthorDao authorDao;
+
+  public CompletableFuture<Post> getPost(Comment comment, DataFetchingEnvironment env) {
+    DataLoader<Integer, Post> post = env.getDataLoader("post");
+    return post.load(comment.getPostId());
   }
 
-  public Author getAuthor(Comment comment) {
-    return null;
+  public Author getAuthor(Comment comment, DataFetchingEnvironment env) {
+    return authorDao.findById(comment.getAuthorId(), env);
   }
 }

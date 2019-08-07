@@ -18,10 +18,13 @@ package com.github.graphql.server.benchmark.springboot;
 
 import com.coxautodev.graphql.tools.GraphQLResolver;
 import graphql.schema.DataFetchingEnvironment;
+import org.dataloader.DataLoader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Component
 public class PostResolver implements GraphQLResolver<Post> {
@@ -33,7 +36,8 @@ public class PostResolver implements GraphQLResolver<Post> {
     return authorDao.findById(post.getAuthorId(), env);
   }
 
-  public List<Comment> getComments(Post post) {
-    return null;
+  public CompletableFuture<List<Comment>> getComments(Post post, DataFetchingEnvironment env) throws ExecutionException, InterruptedException {
+    DataLoader<Integer, List<Comment>> comment = env.getDataLoader("comment");
+    return comment.load(post.getId());
   }
 }

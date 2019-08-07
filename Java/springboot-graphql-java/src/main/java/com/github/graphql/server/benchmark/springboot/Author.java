@@ -18,14 +18,20 @@ package com.github.graphql.server.benchmark.springboot;
 
 public class Author {
 
+  private Integer id;
   private String firstName;
   private String lastName;
   private String bio;
 
-  public Author(String firstName, String lastName, String bio) {
+  public Author(Integer id, String firstName, String lastName, String bio) {
+    this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.bio = bio;
+  }
+
+  public Integer getId() {
+    return id;
   }
 
   public String getFirstName() {

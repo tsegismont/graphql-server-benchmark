@@ -17,6 +17,7 @@
 package com.github.graphql.server.benchmark.springboot;
 
 import com.coxautodev.graphql.tools.GraphQLResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,11 +25,17 @@ import java.util.List;
 @Component
 public class AuthorResolver implements GraphQLResolver<Author> {
 
+  @Autowired
+  PostDao postDao;
+
+  @Autowired
+  CommentDao commentDao;
+
   public List<Post> getPosts(Author author) {
-    return null;
+    return postDao.findByAuthorId(author.getId());
   }
 
   public List<Comment> getComments(Author author) {
-    return null;
+    return commentDao.findByAuthorId(author.getId());
   }
 }

@@ -23,39 +23,36 @@ import org.springframework.stereotype.Component;
 import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.stream.Collectors.groupingBy;
+
 @Component
-public class PostDao {
+public class CommentDao {
 
   @Autowired
   JdbcTemplate jdbcTemplate;
 
-  public List<Post> findPosts() {
-    return jdbcTemplate.query("select * from posts", this::toPost);
-  }
-
-  public List<Post> findByAuthorId(Integer authorId) {
+  public List<Comment> findByAuthorId(Integer authorId) {
     return jdbcTemplate.query(
-      "select * from posts where author_id = ?",
+      "select * from comments where author_id = ?",
       ps -> ps.setInt(1, authorId),
-      this::toPost
+      this::toComment
     );
   }
 
-  public Map<Integer, Post> findPosts(Set<Integer> keys) {
+  public Map<Integer, List<Comment>> findComments(Set<Integer> keys) {
     Integer[] array = keys.toArray(new Integer[0]);
     return jdbcTemplate.query(
-      "select * from posts where id = any(?)",
+      "select * from comments where post_id = any(?)",
       ps -> ps.setArray(1, ps.getConnection().createArrayOf(JDBCType.INTEGER.getName(), array)),
-      this::toPost
-    ).stream().collect(HashMap::new, (map, post) -> map.put(post.getId(), post), HashMap::putAll);
+      this::toComment
+    ).stream().collect(groupingBy(Comment::getPostId));
   }
 
-  private Post toPost(ResultSet rs, int idx) throws SQLException {
-    return new Post(rs.getInt("id"), rs.getInt("author_id"), rs.getString("title"), rs.getString("content"));
+  private Comment toComment(ResultSet rs, int idx) throws SQLException {
+    return new Comment(rs.getInt("post_id"), rs.getInt("author_id"), rs.getString("content"));
   }
 }

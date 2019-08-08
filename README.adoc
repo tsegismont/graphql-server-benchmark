@@ -60,7 +60,6 @@ Each framework is tested with different link:queries.adoc[queries].
 
 The server may:
 
-* cache GraphQL query parsing result
 * cache author profiles per-query
 * use HTTP and Postgres pipelining
 

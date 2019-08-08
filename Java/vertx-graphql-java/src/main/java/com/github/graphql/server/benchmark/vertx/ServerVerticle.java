@@ -17,10 +17,8 @@
 package com.github.graphql.server.benchmark.vertx;
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import graphql.GraphQL;
-import graphql.execution.preparsed.PreparsedDocumentEntry;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLSchema;
@@ -179,10 +177,7 @@ public class ServerVerticle extends AbstractVerticle {
     SchemaGenerator schemaGenerator = new SchemaGenerator();
     GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
 
-    Cache<String, PreparsedDocumentEntry> queryCache = Caffeine.newBuilder().build();
-
-    return GraphQL.newGraphQL(graphQLSchema).preparsedDocumentProvider(queryCache::get)
-      .build();
+    return GraphQL.newGraphQL(graphQLSchema).build();
   }
 
   private Future<JsonObject> findAuthor(Integer authorId, DataFetchingEnvironment env) {

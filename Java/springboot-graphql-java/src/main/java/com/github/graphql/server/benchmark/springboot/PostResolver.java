@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 @Component
 public class PostResolver implements GraphQLResolver<Post> {
@@ -36,7 +35,7 @@ public class PostResolver implements GraphQLResolver<Post> {
     return authorDao.findById(post.getAuthorId(), env);
   }
 
-  public CompletableFuture<List<Comment>> getComments(Post post, DataFetchingEnvironment env) throws ExecutionException, InterruptedException {
+  public CompletableFuture<List<Comment>> getComments(Post post, DataFetchingEnvironment env) {
     DataLoader<Integer, List<Comment>> comment = env.getDataLoader("comment");
     return comment.load(post.getId());
   }

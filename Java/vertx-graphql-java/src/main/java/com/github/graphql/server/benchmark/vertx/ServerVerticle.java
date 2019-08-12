@@ -36,9 +36,8 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
+import io.vertx.ext.web.handler.ErrorHandler;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
-import io.vertx.ext.web.handler.graphql.GraphQLHandlerOptions;
-import io.vertx.ext.web.handler.graphql.GraphiQLOptions;
 import io.vertx.ext.web.handler.graphql.VertxPropertyDataFetcher;
 import org.dataloader.BatchLoaderEnvironment;
 import org.dataloader.DataLoader;
@@ -71,9 +70,7 @@ public class ServerVerticle extends AbstractVerticle {
     setupPgClient(config);
 
     GraphQL graphQL = setupGraphQL();
-    GraphQLHandlerOptions options = new GraphQLHandlerOptions()
-      .setGraphiQLOptions(new GraphiQLOptions().setEnabled(true));
-    GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, options)
+    GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL)
       .dataLoaderRegistry(rc -> {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader((keys, env) -> {
           return toCompletableFuture(findComments(keys, env));

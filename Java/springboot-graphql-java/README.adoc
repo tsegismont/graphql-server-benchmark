@@ -1,0 +1,20 @@
+= Spring Boot with GraphQL Java
+
+Benchmark implementation with Spring Boot and GraphQL Java.
+
+== Running
+
+For testing purposes, you may run it with Docker:
+
+[source,bash]
+----
+docker build -t graphql-server-benchmark/springboot-graphql-java .
+docker run --network host -it graphql-server-benchmark/springboot-graphql-java
+----
+
+Or, if you have a JDK8 (or JDK11) and Maven on your machine:
+
+[source,bash]
+----
+mvn clean spring-boot:run
+----

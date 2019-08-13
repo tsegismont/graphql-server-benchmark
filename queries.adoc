@@ -42,8 +42,8 @@
 === For desktop
 
 ----
-query ($authordId: Int!) {
-  author(id: $authordId) {
+query ($authorId: Int!) {
+  author(id: $authorId) {
     firstName
     lastName
     bio
@@ -64,8 +64,8 @@ query ($authordId: Int!) {
 === For mobile
 
 ----
-query ($authordId: Int!) {
-  author(id: $authordId) {
+query ($authorId: Int!) {
+  author(id: $authorId) {
     firstName
     lastName
     bio

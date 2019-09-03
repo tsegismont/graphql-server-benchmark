@@ -58,6 +58,11 @@ Each framework is tested with different link:queries.adoc[queries].
 
 == Guidelines
 
+The server must:
+
+* accept the `BACKEND_HOST` environment variable for configuration
+* accept the `POSTGRES_HOST` environment variable for configuration
+
 The server may:
 
 * cache author profiles per-query

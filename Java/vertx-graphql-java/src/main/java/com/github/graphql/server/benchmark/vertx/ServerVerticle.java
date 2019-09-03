@@ -36,7 +36,6 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
-import io.vertx.ext.web.handler.ErrorHandler;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
 import io.vertx.ext.web.handler.graphql.VertxPropertyDataFetcher;
 import org.dataloader.BatchLoaderEnvironment;
@@ -93,7 +92,7 @@ public class ServerVerticle extends AbstractVerticle {
 
   private void setupWebClient(JsonObject config) {
     JsonObject backend = config.getJsonObject("backend", new JsonObject());
-    String backendHost = backend.getString("host", "localhost");
+    String backendHost = System.getenv().getOrDefault("BACKEND_HOST", backend.getString("host", "localhost"));
     int backendPort = backend.getInteger("port", 8181);
     int maxSize = backend.getInteger("poolSize", 32);
 
@@ -107,7 +106,7 @@ public class ServerVerticle extends AbstractVerticle {
 
   private void setupPgClient(JsonObject config) {
     JsonObject postgres = config.getJsonObject("postgres", new JsonObject());
-    String postgresHost = postgres.getString("host", "localhost");
+    String postgresHost = System.getenv().getOrDefault("POSTGRES_HOST", postgres.getString("host", "localhost"));
     int postgresPort = postgres.getInteger("port", 5432);
     int maxSize = postgres.getInteger("poolSize", 4);
 

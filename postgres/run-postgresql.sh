@@ -2,8 +2,8 @@
 
 set -e
 
-sudo docker build -t graphql-server-benchmark/postgres .
-sudo docker run --network host -it graphql-server-benchmark/postgres \
+docker build -t graphql-server-benchmark/postgres .
+docker run --network host -it graphql-server-benchmark/postgres \
 	-c "listen_addresses=*" \
 	-c "max_connections=2000" \
 	-c "shared_buffers=256MB" \

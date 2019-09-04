@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -x
 
 FRAMEWORK_DIR=$1
 if [ ! -d "${FRAMEWORK_DIR}" ]; then

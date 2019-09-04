@@ -8,6 +8,6 @@
   "postgres": {
     "host": "localhost",
     "port": 5432,
-    "poolSize": 4
+    "poolSize": 32
   }
 }

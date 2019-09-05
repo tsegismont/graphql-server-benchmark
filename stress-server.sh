@@ -9,7 +9,7 @@ fi
 
 CONNECTIONS=$2
 DURATION=$3
-REPORT_FILE="${LUA_FILE}.report"
+REPORT_FILE=$4
 SERVER_URL="http://${SERVER_HOST:-localhost}:8080/graphql"
 
 export REPORT_FILE

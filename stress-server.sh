@@ -14,4 +14,4 @@ SERVER_URL="http://${SERVER_HOST:-localhost}:8080/graphql"
 
 export REPORT_FILE
 
-wrk --latency -d $DURATION -c $CONNECTIONS -t 8 -s "${LUA_FILE}" "${SERVER_URL}"
+wrk --latency -d $DURATION -c $CONNECTIONS -t 8 -s "${LUA_FILE}" ${SERVER_URL}

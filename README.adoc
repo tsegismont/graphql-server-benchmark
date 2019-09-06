@@ -92,7 +92,7 @@ For example, _Java/vertx-graphql-java_ means the implementation:
 
 Each implementation must provide a `Dockerfile` (build and run).
 
-For testing purposes, you can build an run with Docker:
+For testing purposes, you can build and run with Docker:
 
 * the link:backend/[backend] server
 * the link:postgres/[postgres] database

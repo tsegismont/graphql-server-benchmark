@@ -2,9 +2,11 @@
 
 set -e
 
+trap "exit" INT
+
 LUA_FILE=$1
 if [ ! -f "${LUA_FILE}" ]; then
-  echo "${LUA_FILE} does not exist."
+  echo "\"${LUA_FILE}\" does not exist."
 fi
 
 SERVER_URL="http://${SERVER_HOST:-localhost}:8080/graphql"

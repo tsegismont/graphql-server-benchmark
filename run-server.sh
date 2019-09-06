@@ -2,15 +2,17 @@
 
 set -e
 
+trap "exit" INT
+
 FRAMEWORK_DIR="$1"
 if [ ! -d "${FRAMEWORK_DIR}" ]; then
-  echo "${FRAMEWORK_DIR} is not a directory."
+  echo "\"${FRAMEWORK_DIR}\" is not a directory."
   exit 1
 fi
 
 FRAMEWORK_ENV_FILE="${FRAMEWORK_DIR}/set-env.sh"
 if [ ! -f "${FRAMEWORK_ENV_FILE}" ]; then
-  echo "${FRAMEWORK_ENV_FILE} file is missing."
+  echo "\"${FRAMEWORK_ENV_FILE}\" file is missing."
   exit 1
 fi
 

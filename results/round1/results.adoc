@@ -1,0 +1,29 @@
+= Round 1 results
+
+== All posts
+
+=== Desktop
+
+image::all-posts-desktop-throughput.svg[]
+
+image::all-posts-desktop-latency.svg[]
+
+=== Mobile
+
+image::all-posts-mobile-throughput.svg[]
+
+image::all-posts-mobile-latency.svg[]
+
+== Author profile
+
+=== Desktop
+
+image::author-profile-desktop-throughput.svg[]
+
+image::author-profile-desktop-latency.svg[]
+
+=== Mobile
+
+image::author-profile-mobile-throughput.svg[]
+
+image::author-profile-mobile-latency.svg[]

@@ -4,7 +4,7 @@ Benchmark of a simple https://graphql.org/[GraphQL] server on popular spec imple
 
 == Lastest results
 
-_Coming soon_ ...
+link:results/round1/results.adoc[Round 1]
 
 == The benchmark
 

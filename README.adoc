@@ -90,7 +90,10 @@ For example, _Java/vertx-graphql-java_ means the implementation:
 * uses Vert.x as the web server
 * uses GraphQL-Java engine
 
-Each implementation must provide a `Dockerfile` (build and run).
+Each implementation must provide:
+
+* a `Dockerfile` (build and run)
+* a `set-env.sh` file that defines the `FRAMEWORK_NAME` implementation (must be unique across implementations)
 
 For testing purposes, you can build and run with Docker:
 

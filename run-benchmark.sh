@@ -18,7 +18,7 @@ fi
 REPORT_FILE="${FRAMEWORK_DIR}/${LUA_FILE}.report"
 rm -f "${REPORT_FILE}"
 
-DURATION=60
+DURATION="1m"
 
 echo "Warming up framework ${FRAMEWORK_DIR} for benchmark ${LUA_FILE}..."
 ./warmup-server.sh "${LUA_FILE}"

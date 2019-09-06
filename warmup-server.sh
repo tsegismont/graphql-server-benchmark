@@ -11,5 +11,5 @@ fi
 
 SERVER_URL="http://${SERVER_HOST:-localhost}:8080/graphql"
 
-wrk --latency -d 60 -c 256 -t 8 -s "${LUA_FILE}" ${SERVER_URL} >/dev/null
-wrk --latency -d 60 -c 256 -t 8 -s "${LUA_FILE}" ${SERVER_URL} >/dev/null
+wrk --latency -d 1m -c 256 -t 8 -s "${LUA_FILE}" ${SERVER_URL} >/dev/null
+wrk --latency -d 1m -c 256 -t 8 -s "${LUA_FILE}" ${SERVER_URL} >/dev/null

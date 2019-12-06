@@ -56,9 +56,8 @@
       <artifactId>vertx-web-client</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.reactiverse</groupId>
-      <artifactId>reactive-pg-client</artifactId>
-      <version>0.11.4</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-pg-client</artifactId>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>

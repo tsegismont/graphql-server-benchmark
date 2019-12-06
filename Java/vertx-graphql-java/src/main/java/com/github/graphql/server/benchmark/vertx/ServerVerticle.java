@@ -23,7 +23,6 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.*;
-import io.reactiverse.pgclient.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -39,6 +38,12 @@ import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
 import io.vertx.ext.web.handler.graphql.GraphiQLHandler;
 import io.vertx.ext.web.handler.graphql.VertxPropertyDataFetcher;
+import io.vertx.pgclient.PgConnectOptions;
+import io.vertx.pgclient.PgPool;
+import io.vertx.sqlclient.PoolOptions;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.SqlResult;
+import io.vertx.sqlclient.Tuple;
 import org.dataloader.BatchLoaderEnvironment;
 import org.dataloader.DataLoader;
 import org.dataloader.DataLoaderRegistry;
@@ -112,15 +117,16 @@ public class ServerVerticle extends AbstractVerticle {
     int postgresPort = postgres.getInteger("port", 5432);
     int maxSize = postgres.getInteger("poolSize", 4);
 
-    PgPoolOptions pgPoolOptions = new PgPoolOptions()
+    PgConnectOptions pgConnectOptions = new PgConnectOptions()
       .setHost(postgresHost)
       .setPort(postgresPort)
       .setUser("graphql")
       .setPassword("graphql")
       .setDatabase("blogdb")
-      .setCachePreparedStatements(true)
-      .setMaxSize(maxSize);
-    pgClient = PgClient.pool(vertx, pgPoolOptions);
+            .setCachePreparedStatements(true);
+    PoolOptions pgPoolOptions = new PoolOptions()
+            .setMaxSize(maxSize);
+    pgClient = PgPool.pool(vertx, pgConnectOptions, pgPoolOptions);
   }
 
   private GraphQL setupGraphQL() {
@@ -217,21 +223,21 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<JsonArray> findPosts(Integer authorId, DataFetchingEnvironment env) {
-    Future<PgResult<JsonArray>> future = Future.future();
+    Future<SqlResult<JsonArray>> future = Future.future();
     Collector<Row, ?, JsonArray> collector = mapping(this::toPost, collectingAndThen(toList(), JsonArray::new));
     if (authorId == null) {
       pgClient.preparedQuery("select * from posts", collector, future);
     } else {
       pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(authorId), collector, future);
     }
-    return future.map(PgResult::value);
+    return future.map(SqlResult::value);
   }
 
   private Future<Map<Integer, JsonObject>> findPosts(Set<Integer> ids, BatchLoaderEnvironment env) {
-    Future<PgResult<Map<Integer, JsonObject>>> future = Future.future();
+    Future<SqlResult<Map<Integer, JsonObject>>> future = Future.future();
     Collector<Row, ?, Map<Integer, JsonObject>> collector = toMap(row -> row.getInteger("id"), this::toPost);
     pgClient.preparedQuery("select * from posts where id = any($1)", Tuple.of(ids.toArray(new Integer[0])), collector, future);
-    return future.map(PgResult::value);
+    return future.map(SqlResult::value);
   }
 
   private JsonObject toPost(Row row) {
@@ -243,20 +249,20 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<Map<Integer, JsonArray>> findComments(Set<Integer> postIds, BatchLoaderEnvironment env) {
-    Future<PgResult<Map<Integer, JsonArray>>> future = Future.future();
+    Future<SqlResult<Map<Integer, JsonArray>>> future = Future.future();
     Collector<Row, ?, Map<Integer, JsonArray>> collector = groupingBy(
       row -> row.getInteger("post_id"),
       mapping(this::toComment, collectingAndThen(toList(), JsonArray::new))
     );
     pgClient.preparedQuery("select * from comments where post_id = any($1)", Tuple.of(postIds.toArray(new Integer[0])), collector, future);
-    return future.map(PgResult::value);
+    return future.map(SqlResult::value);
   }
 
   private Future<JsonArray> findComments(Integer authorId, DataFetchingEnvironment env) {
-    Future<PgResult<JsonArray>> future = Future.future();
+    Future<SqlResult<JsonArray>> future = Future.future();
     Collector<Row, ?, JsonArray> collector = mapping(this::toComment, collectingAndThen(toList(), JsonArray::new));
     pgClient.preparedQuery("select * from comments where author_id = $1", Tuple.of(authorId), collector, future);
-    return future.map(PgResult::value);
+    return future.map(SqlResult::value);
   }
 
   private JsonObject toComment(Row row) {

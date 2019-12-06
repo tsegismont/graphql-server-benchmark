@@ -26,6 +26,7 @@ import graphql.schema.idl.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -123,9 +124,9 @@ public class ServerVerticle extends AbstractVerticle {
       .setUser("graphql")
       .setPassword("graphql")
       .setDatabase("blogdb")
-            .setCachePreparedStatements(true);
+      .setCachePreparedStatements(true);
     PoolOptions pgPoolOptions = new PoolOptions()
-            .setMaxSize(maxSize);
+      .setMaxSize(maxSize);
     pgClient = PgPool.pool(vertx, pgConnectOptions, pgPoolOptions);
   }
 
@@ -185,18 +186,18 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<JsonObject> findAuthor(Integer authorId, DataFetchingEnvironment env) {
-    Future<JsonObject> future = Future.future();
+    Promise<JsonObject> promise = Promise.promise();
 
     AsyncLoadingCache<Integer, JsonObject> authorCache = getAuthorCache(env);
     authorCache.get(authorId).whenComplete((jsonObject, throwable) -> {
       if (throwable == null) {
-        future.complete(jsonObject);
+        promise.complete(jsonObject);
       } else {
-        future.fail(throwable);
+        promise.fail(throwable);
       }
     });
 
-    return future;
+    return promise.future();
   }
 
   private AsyncLoadingCache<Integer, JsonObject> getAuthorCache(DataFetchingEnvironment env) {
@@ -212,32 +213,32 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<JsonObject> loadAuthor(Integer authorId) {
-    Future<HttpResponse<JsonObject>> future = Future.future();
+    Promise<HttpResponse<JsonObject>> promise = Promise.promise();
 
     webClient.get("/author/" + authorId)
       .as(BodyCodec.jsonObject())
       .expect(ResponsePredicate.SC_OK)
-      .send(future);
+      .send(promise);
 
-    return future.map(HttpResponse::body);
+    return promise.future().map(HttpResponse::body);
   }
 
   private Future<JsonArray> findPosts(Integer authorId, DataFetchingEnvironment env) {
-    Future<SqlResult<JsonArray>> future = Future.future();
+    Promise<SqlResult<JsonArray>> promise = Promise.promise();
     Collector<Row, ?, JsonArray> collector = mapping(this::toPost, collectingAndThen(toList(), JsonArray::new));
     if (authorId == null) {
-      pgClient.preparedQuery("select * from posts", collector, future);
+      pgClient.preparedQuery("select * from posts", collector, promise);
     } else {
-      pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(authorId), collector, future);
+      pgClient.preparedQuery("select * from posts where author_id = $1", Tuple.of(authorId), collector, promise);
     }
-    return future.map(SqlResult::value);
+    return promise.future().map(SqlResult::value);
   }
 
   private Future<Map<Integer, JsonObject>> findPosts(Set<Integer> ids, BatchLoaderEnvironment env) {
-    Future<SqlResult<Map<Integer, JsonObject>>> future = Future.future();
+    Promise<SqlResult<Map<Integer, JsonObject>>> promise = Promise.promise();
     Collector<Row, ?, Map<Integer, JsonObject>> collector = toMap(row -> row.getInteger("id"), this::toPost);
-    pgClient.preparedQuery("select * from posts where id = any($1)", Tuple.of(ids.toArray(new Integer[0])), collector, future);
-    return future.map(SqlResult::value);
+    pgClient.preparedQuery("select * from posts where id = any($1)", Tuple.of(ids.toArray(new Integer[0])), collector, promise);
+    return promise.future().map(SqlResult::value);
   }
 
   private JsonObject toPost(Row row) {
@@ -249,20 +250,20 @@ public class ServerVerticle extends AbstractVerticle {
   }
 
   private Future<Map<Integer, JsonArray>> findComments(Set<Integer> postIds, BatchLoaderEnvironment env) {
-    Future<SqlResult<Map<Integer, JsonArray>>> future = Future.future();
+    Promise<SqlResult<Map<Integer, JsonArray>>> promise = Promise.promise();
     Collector<Row, ?, Map<Integer, JsonArray>> collector = groupingBy(
       row -> row.getInteger("post_id"),
       mapping(this::toComment, collectingAndThen(toList(), JsonArray::new))
     );
-    pgClient.preparedQuery("select * from comments where post_id = any($1)", Tuple.of(postIds.toArray(new Integer[0])), collector, future);
-    return future.map(SqlResult::value);
+    pgClient.preparedQuery("select * from comments where post_id = any($1)", Tuple.of(postIds.toArray(new Integer[0])), collector, promise);
+    return promise.future().map(SqlResult::value);
   }
 
   private Future<JsonArray> findComments(Integer authorId, DataFetchingEnvironment env) {
-    Future<SqlResult<JsonArray>> future = Future.future();
+    Promise<SqlResult<JsonArray>> promise = Promise.promise();
     Collector<Row, ?, JsonArray> collector = mapping(this::toComment, collectingAndThen(toList(), JsonArray::new));
-    pgClient.preparedQuery("select * from comments where author_id = $1", Tuple.of(authorId), collector, future);
-    return future.map(SqlResult::value);
+    pgClient.preparedQuery("select * from comments where author_id = $1", Tuple.of(authorId), collector, promise);
+    return promise.future().map(SqlResult::value);
   }
 
   private JsonObject toComment(Row row) {

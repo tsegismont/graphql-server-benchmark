@@ -37,6 +37,7 @@ import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.client.predicate.ResponsePredicate;
 import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
+import io.vertx.ext.web.handler.graphql.GraphiQLHandler;
 import io.vertx.ext.web.handler.graphql.VertxPropertyDataFetcher;
 import org.dataloader.BatchLoaderEnvironment;
 import org.dataloader.DataLoader;
@@ -84,6 +85,7 @@ public class ServerVerticle extends AbstractVerticle {
 
     Router router = Router.router(vertx);
     router.route("/graphql").handler(graphQLHandler);
+    router.get("/graphiql/*").handler(GraphiQLHandler.create());
 
     vertx.createHttpServer()
       .requestHandler(router)

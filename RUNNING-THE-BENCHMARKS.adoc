@@ -1,0 +1,114 @@
+= Running the benchmarks
+
+== Database
+
+Login to the machine where you will run the database.
+
+Clone the project if you haven't yet:
+
+[source,shell]
+----
+git clone https://github.com/tsegismont/graphql-server-benchmark.git
+----
+
+Get latest updates and run the database:
+
+[source,shell]
+----
+cd graphql-server-benchmark/postgres
+git pull
+./run-postgresql.sh
+----
+
+== Backend
+
+Login to the machine where you will run the backend.
+
+Clone the project if you haven't yet:
+
+[source,shell]
+----
+git clone https://github.com/tsegismont/graphql-server-benchmark.git
+----
+
+Get latest updates and run the backend:
+
+[source,shell]
+----
+cd graphql-server-benchmark/backend
+git pull
+./run-backend.sh
+----
+
+== Server
+
+Login to the machine where you will run the server.
+
+Clone the project if you haven't yet:
+
+[source,shell]
+----
+git clone https://github.com/tsegismont/graphql-server-benchmark.git
+----
+
+Create a `set-env.sh` file to configure the Postgres and backend hosts if you haven't yet:
+
+[source,shell]
+.`set-env.sh` file contents
+----
+#!/bin/bash
+
+export BACKEND_HOST="backend.host.or.ip.address.my.corp.int"
+export POSTGRES_HOST="postgres.host.or.ip.address.my.corp.int"
+----
+
+Get latest updates and run the server you want to test:
+
+[source,shell]
+----
+cd graphql-server-benchmark
+git pull
+source set-env.sh
+./run-server.sh Java/vertx-graphql-java
+----
+
+== Injector
+
+Login to the machine where you will run the injector.
+
+Clone the project if you haven't yet:
+
+[source,shell]
+----
+git clone https://github.com/tsegismont/graphql-server-benchmark.git
+----
+
+Create a `set-env.sh` file to configure the server host if you haven't yet:
+
+[source,shell]
+.`set-env.sh` file contents
+----
+#!/bin/bash
+
+export SERVER_HOST="server.host.or.ip.address.my.corp.int"
+----
+
+Get latest updates and start the injector:
+
+[source,shell]
+----
+cd graphql-server-benchmark
+git pull
+source set-env.sh
+./run-benchmarks.sh Java/vertx-graphql-java/
+----
+
+The results will be saved in the corresponding server directory.
+For example:
+
+----
+Java/vertx-graphql-java/author-profile-mobile.lua.report
+Java/vertx-graphql-java/all-posts-mobile.lua.report
+Java/vertx-graphql-java/all-posts-desktop.lua.report
+Java/vertx-graphql-java/author-profile-desktop.lua.report
+----

@@ -30,6 +30,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <vertx.version>4.0.0-SNAPSHOT</vertx.version>
+    <vertx.launcher>com.github.graphql.server.benchmark.vertx.AppLauncher</vertx.launcher>
     <vertx.verticle>com.github.graphql.server.benchmark.vertx.ServerVerticle</vertx.verticle>
     <vertx-maven-plugin.version>1.0.22</vertx-maven-plugin.version>
   </properties>

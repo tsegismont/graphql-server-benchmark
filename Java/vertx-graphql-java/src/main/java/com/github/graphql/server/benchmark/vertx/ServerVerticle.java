@@ -19,10 +19,7 @@ package com.github.graphql.server.benchmark.vertx;
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import graphql.GraphQL;
-import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import graphql.schema.GraphQLSchema;
-import graphql.schema.idl.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.impl.ContextInternal;
@@ -39,8 +36,6 @@ import io.vertx.ext.web.handler.graphql.GraphQLHandler;
 import io.vertx.ext.web.handler.graphql.GraphQLHandlerOptions;
 import io.vertx.ext.web.handler.graphql.GraphiQLHandler;
 import io.vertx.ext.web.handler.graphql.dataloader.VertxMappedBatchLoader;
-import io.vertx.ext.web.handler.graphql.schema.VertxDataFetcher;
-import io.vertx.ext.web.handler.graphql.schema.VertxPropertyDataFetcher;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.PoolOptions;
@@ -56,10 +51,11 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collector;
 
-import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
 import static java.util.stream.Collectors.*;
 
 public class ServerVerticle extends AbstractVerticle {
+
+  static GraphQL graphQL;
 
   private ContextInternal context;
   private WebClient webClient;
@@ -75,14 +71,13 @@ public class ServerVerticle extends AbstractVerticle {
     setupWebClient(config);
     setupPgClient(config);
 
-    GraphQL graphQL = setupGraphQL();
     GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, new GraphQLHandlerOptions())
       .dataLoaderRegistry(rc -> {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader(
-          VertxMappedBatchLoader.create(this::findComments, context)
+          VertxMappedBatchLoader.create(this::findComments, env -> context)
         );
         DataLoader<Integer, JsonObject> postDataLoader = DataLoader.newMappedDataLoader(
-          VertxMappedBatchLoader.create(this::findPosts, context)
+          VertxMappedBatchLoader.create(this::findPosts, env -> context)
         );
         return new DataLoaderRegistry()
           .register("comment", commentDataLoader)
@@ -90,12 +85,17 @@ public class ServerVerticle extends AbstractVerticle {
       });
 
     Router router = Router.router(vertx);
-    router.route("/graphql").handler(graphQLHandler);
+    router.route("/graphql").handler(this::bindVerticleInstance).handler(graphQLHandler);
     router.get("/graphiql/*").handler(GraphiQLHandler.create());
 
     vertx.createHttpServer()
       .requestHandler(router)
       .listen(port);
+  }
+
+  private void bindVerticleInstance(RoutingContext rc) {
+    rc.put(ServerVerticle.class.getName(), this);
+    rc.next();
   }
 
   private void setupWebClient(JsonObject config) {
@@ -130,62 +130,7 @@ public class ServerVerticle extends AbstractVerticle {
     pgClient = PgPool.pool(vertx, pgConnectOptions, pgPoolOptions);
   }
 
-  private GraphQL setupGraphQL() {
-    String schema = vertx.fileSystem().readFileBlocking("blog.graphqls").toString();
-
-    SchemaParser schemaParser = new SchemaParser();
-    TypeDefinitionRegistry typeDefinitionRegistry = schemaParser.parse(schema);
-
-    RuntimeWiring runtimeWiring = newRuntimeWiring()
-      .wiringFactory(new WiringFactory() {
-        @Override
-        public DataFetcher<Object> getDefaultDataFetcher(FieldWiringEnvironment environment) {
-          return VertxPropertyDataFetcher.create(environment.getFieldDefinition().getName());
-        }
-      })
-      .type("Query", builder -> {
-        return builder
-          .dataFetcher("posts", VertxDataFetcher.create(env -> findPosts(null, env), context))
-          .dataFetcher("author", VertxDataFetcher.create(env -> findAuthor(env.getArgument("id"), env), context));
-      }).type("Post", builder -> {
-        return builder
-          .dataFetcher("author", VertxDataFetcher.create(env -> {
-            JsonObject post = env.getSource();
-            return findAuthor(post.getInteger("author_id"), env);
-          }, context)).dataFetcher("comments", env -> {
-            JsonObject post = env.getSource();
-            DataLoader<Integer, JsonArray> comment = env.getDataLoader("comment");
-            return comment.load(post.getInteger("id"), env);
-          });
-      }).type("Author", builder -> {
-        return builder
-          .dataFetcher("posts", VertxDataFetcher.create(env -> {
-            JsonObject author = env.getSource();
-            return findPosts(author.getInteger("id"), env);
-          }, context)).dataFetcher("comments", VertxDataFetcher.create(env -> {
-            JsonObject author = env.getSource();
-            return findComments(author.getInteger("id"), env);
-          }, context));
-      }).type("Comment", builder -> {
-        return builder
-          .dataFetcher("author", VertxDataFetcher.create(env -> {
-            JsonObject comment = env.getSource();
-            return findAuthor(comment.getInteger("author_id"), env);
-          }, context)).dataFetcher("post", env -> {
-            JsonObject comment = env.getSource();
-            DataLoader<Integer, JsonObject> post = env.getDataLoader("post");
-            return post.load(comment.getInteger("post_id"), env);
-          });
-      })
-      .build();
-
-    SchemaGenerator schemaGenerator = new SchemaGenerator();
-    GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
-
-    return GraphQL.newGraphQL(graphQLSchema).build();
-  }
-
-  private Future<JsonObject> findAuthor(Integer authorId, DataFetchingEnvironment env) {
+  Future<JsonObject> findAuthor(Integer authorId, DataFetchingEnvironment env) {
     AsyncLoadingCache<Integer, JsonObject> authorCache = getAuthorCache(env);
     return Future.fromCompletionStage(authorCache.get(authorId), context);
   }
@@ -212,7 +157,7 @@ public class ServerVerticle extends AbstractVerticle {
       .toCompletableFuture();
   }
 
-  private Future<JsonArray> findPosts(Integer authorId, DataFetchingEnvironment env) {
+  Future<JsonArray> findPosts(Integer authorId, DataFetchingEnvironment env) {
     Collector<Row, ?, JsonArray> collector = mapping(this::toPost, collectingAndThen(toList(), JsonArray::new));
     Future<SqlResult<JsonArray>> future;
     if (authorId == null) {
@@ -254,7 +199,7 @@ public class ServerVerticle extends AbstractVerticle {
       .map(SqlResult::value);
   }
 
-  private Future<JsonArray> findComments(Integer authorId, DataFetchingEnvironment env) {
+  Future<JsonArray> findComments(Integer authorId, DataFetchingEnvironment env) {
     Collector<Row, ?, JsonArray> collector = mapping(this::toComment, collectingAndThen(toList(), JsonArray::new));
     return pgClient.preparedQuery("select * from comments where author_id = $1")
       .collecting(collector)
@@ -267,5 +212,9 @@ public class ServerVerticle extends AbstractVerticle {
       .put("post_id", row.getInteger("post_id"))
       .put("author_id", row.getInteger("author_id"))
       .put("content", row.getString("content"));
+  }
+
+  ContextInternal getContext() {
+    return context;
   }
 }

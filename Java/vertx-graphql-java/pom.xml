@@ -90,9 +90,6 @@
         <configuration>
           <redeploy>true</redeploy>
           <config>src/main/conf/server.json</config>
-          <jvmArgs>
-            <jvmArg>-Dvertxweb.environment=dev</jvmArg>
-          </jvmArgs>
         </configuration>
       </plugin>
     </plugins>

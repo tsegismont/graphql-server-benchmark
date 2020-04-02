@@ -3,4 +3,4 @@ WORKDIR /server
 COPY src src
 COPY pom.xml pom.xml
 RUN mvn package -q
-CMD ["java", "-Xms2G", "-Xmx2G", "-server", "-jar", "target/springboot-graphql-java-1.0-SNAPSHOT.jar"]
+CMD ["java", "-Xms2G", "-Xmx2G", "-server", "-jar", "target/springboot-graphql-java.jar"]

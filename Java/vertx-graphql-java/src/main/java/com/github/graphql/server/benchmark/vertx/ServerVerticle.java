@@ -102,7 +102,7 @@ public class ServerVerticle extends AbstractVerticle {
     JsonObject backend = config.getJsonObject("backend", new JsonObject());
     String backendHost = System.getenv().getOrDefault("BACKEND_HOST", backend.getString("host", "localhost"));
     int backendPort = backend.getInteger("port", 8181);
-    int maxSize = backend.getInteger("poolSize", 32);
+    int maxSize = backend.getInteger("poolSize", 4);
 
     WebClientOptions webClientOptions = new WebClientOptions()
       .setDefaultHost(backendHost)

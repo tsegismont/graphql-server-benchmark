@@ -3,11 +3,11 @@
   "backend": {
     "host": "localhost",
     "port": 8181,
-    "poolSize": 32
+    "poolSize": 4
   },
   "postgres": {
     "host": "localhost",
     "port": 5432,
-    "poolSize": 32
+    "poolSize": 4
   }
 }

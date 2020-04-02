@@ -91,7 +91,6 @@
           <redeploy>true</redeploy>
           <config>src/main/conf/server.json</config>
           <jvmArgs>
-            <jvmArg>-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory</jvmArg>
             <jvmArg>-Dvertxweb.environment=dev</jvmArg>
           </jvmArgs>
         </configuration>

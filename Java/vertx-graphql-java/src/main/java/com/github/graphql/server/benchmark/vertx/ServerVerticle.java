@@ -25,7 +25,6 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -39,6 +38,8 @@ import io.vertx.ext.web.codec.BodyCodec;
 import io.vertx.ext.web.handler.graphql.GraphQLHandler;
 import io.vertx.ext.web.handler.graphql.GraphQLHandlerOptions;
 import io.vertx.ext.web.handler.graphql.GraphiQLHandler;
+import io.vertx.ext.web.handler.graphql.dataloader.VertxMappedBatchLoader;
+import io.vertx.ext.web.handler.graphql.schema.VertxDataFetcher;
 import io.vertx.ext.web.handler.graphql.schema.VertxPropertyDataFetcher;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgPool;
@@ -53,8 +54,6 @@ import org.dataloader.DataLoaderRegistry;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.function.Function;
 import java.util.stream.Collector;
 
 import static graphql.schema.idl.RuntimeWiring.newRuntimeWiring;
@@ -79,16 +78,12 @@ public class ServerVerticle extends AbstractVerticle {
     GraphQL graphQL = setupGraphQL();
     GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, new GraphQLHandlerOptions())
       .dataLoaderRegistry(rc -> {
-        DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader((keys, env) -> {
-          Promise<Map<Integer, JsonArray>> promise = context.promise();
-          context.runOnContext(v -> findComments(keys, env).onComplete(promise));
-          return promise.future().toCompletionStage();
-        });
-        DataLoader<Integer, JsonObject> postDataLoader = DataLoader.newMappedDataLoader((keys, env) -> {
-          Promise<Map<Integer, JsonObject>> promise = context.promise();
-          context.runOnContext(v -> findPosts(keys, env).onComplete(promise));
-          return promise.future().toCompletionStage();
-        });
+        DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader(
+          VertxMappedBatchLoader.create(this::findComments, context)
+        );
+        DataLoader<Integer, JsonObject> postDataLoader = DataLoader.newMappedDataLoader(
+          VertxMappedBatchLoader.create(this::findPosts, context)
+        );
         return new DataLoaderRegistry()
           .register("comment", commentDataLoader)
           .register("post", postDataLoader);
@@ -150,33 +145,33 @@ public class ServerVerticle extends AbstractVerticle {
       })
       .type("Query", builder -> {
         return builder
-          .dataFetcher("posts", async(env -> findPosts(null, env)))
-          .dataFetcher("author", async(env -> findAuthor(env.getArgument("id"), env)));
+          .dataFetcher("posts", VertxDataFetcher.create(env -> findPosts(null, env), context))
+          .dataFetcher("author", VertxDataFetcher.create(env -> findAuthor(env.getArgument("id"), env), context));
       }).type("Post", builder -> {
         return builder
-          .dataFetcher("author", async(env -> {
+          .dataFetcher("author", VertxDataFetcher.create(env -> {
             JsonObject post = env.getSource();
             return findAuthor(post.getInteger("author_id"), env);
-          })).dataFetcher("comments", env -> {
+          }, context)).dataFetcher("comments", env -> {
             JsonObject post = env.getSource();
             DataLoader<Integer, JsonArray> comment = env.getDataLoader("comment");
             return comment.load(post.getInteger("id"), env);
           });
       }).type("Author", builder -> {
         return builder
-          .dataFetcher("posts", async(env -> {
+          .dataFetcher("posts", VertxDataFetcher.create(env -> {
             JsonObject author = env.getSource();
             return findPosts(author.getInteger("id"), env);
-          })).dataFetcher("comments", async(env -> {
+          }, context)).dataFetcher("comments", VertxDataFetcher.create(env -> {
             JsonObject author = env.getSource();
             return findComments(author.getInteger("id"), env);
-          }));
+          }, context));
       }).type("Comment", builder -> {
         return builder
-          .dataFetcher("author", async(env -> {
+          .dataFetcher("author", VertxDataFetcher.create(env -> {
             JsonObject comment = env.getSource();
             return findAuthor(comment.getInteger("author_id"), env);
-          })).dataFetcher("post", env -> {
+          }, context)).dataFetcher("post", env -> {
             JsonObject comment = env.getSource();
             DataLoader<Integer, JsonObject> post = env.getDataLoader("post");
             return post.load(comment.getInteger("post_id"), env);
@@ -272,13 +267,5 @@ public class ServerVerticle extends AbstractVerticle {
       .put("post_id", row.getInteger("post_id"))
       .put("author_id", row.getInteger("author_id"))
       .put("content", row.getString("content"));
-  }
-
-  private <T> DataFetcher<CompletionStage<T>> async(Function<DataFetchingEnvironment, Future<T>> future) {
-    return env -> {
-      Promise<T> promise = context.promise();
-      context.runOnContext(v -> future.apply(env).onComplete(promise));
-      return promise.future().toCompletionStage();
-    };
   }
 }

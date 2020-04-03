@@ -71,7 +71,9 @@ public class ServerVerticle extends AbstractVerticle {
     setupWebClient(config);
     setupPgClient(config);
 
-    GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, new GraphQLHandlerOptions())
+    GraphQLHandlerOptions options = new GraphQLHandlerOptions()
+      .setWorker(true);
+    GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, options)
       .dataLoaderRegistry(rc -> {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader(
           VertxMappedBatchLoader.create(this::findComments, env -> context)

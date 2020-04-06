@@ -1,6 +1,6 @@
 {
   "port": 8080,
-  "graphQLWorker": true,
+  "graphQLWorker": false,
   "backend": {
     "host": "localhost",
     "port": 8181,

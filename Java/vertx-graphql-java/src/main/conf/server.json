@@ -4,11 +4,13 @@
   "backend": {
     "host": "localhost",
     "port": 8181,
-    "poolSize": 4
+    "poolSize": 4,
+    "pipeliningLimit": 1
   },
   "postgres": {
     "host": "localhost",
     "port": 5432,
-    "poolSize": 4
+    "poolSize": 4,
+    "pipeliningLimit": 1
   }
 }

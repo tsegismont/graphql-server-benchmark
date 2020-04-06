@@ -65,14 +65,11 @@ public class ServerVerticle extends AbstractVerticle {
   public void start() {
     context = (ContextInternal) super.context;
 
-    JsonObject config = config();
-    int port = config.getInteger("port", 8080);
-
-    setupWebClient(config);
-    setupPgClient(config);
+    setupWebClient();
+    setupPgClient();
 
     GraphQLHandlerOptions options = new GraphQLHandlerOptions()
-      .setWorker(config.getBoolean("graphQLWorker", false));
+      .setWorker(config().getBoolean("graphQLWorker", false));
     GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, options)
       .dataLoaderRegistry(rc -> {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader(
@@ -92,7 +89,7 @@ public class ServerVerticle extends AbstractVerticle {
 
     vertx.createHttpServer()
       .requestHandler(router)
-      .listen(port);
+      .listen(config().getInteger("port", 8080));
   }
 
   private void bindVerticleInstance(RoutingContext rc) {
@@ -100,25 +97,28 @@ public class ServerVerticle extends AbstractVerticle {
     rc.next();
   }
 
-  private void setupWebClient(JsonObject config) {
-    JsonObject backend = config.getJsonObject("backend", new JsonObject());
+  private void setupWebClient() {
+    JsonObject backend = config().getJsonObject("backend", new JsonObject());
     String backendHost = System.getenv().getOrDefault("BACKEND_HOST", backend.getString("host", "localhost"));
     int backendPort = backend.getInteger("port", 8181);
     int maxSize = backend.getInteger("poolSize", 4);
+    int pipeliningLimit = backend.getInteger("pipeliningLimit", 1);
 
     WebClientOptions webClientOptions = new WebClientOptions()
       .setDefaultHost(backendHost)
       .setDefaultPort(backendPort)
       .setMaxPoolSize(maxSize)
-      .setPipelining(true);
+      .setPipelining(pipeliningLimit > 1)
+      .setPipeliningLimit(Math.max(pipeliningLimit, 1));
     webClient = WebClient.create(vertx, webClientOptions);
   }
 
-  private void setupPgClient(JsonObject config) {
-    JsonObject postgres = config.getJsonObject("postgres", new JsonObject());
+  private void setupPgClient() {
+    JsonObject postgres = config().getJsonObject("postgres", new JsonObject());
     String postgresHost = System.getenv().getOrDefault("POSTGRES_HOST", postgres.getString("host", "localhost"));
     int postgresPort = postgres.getInteger("port", 5432);
     int maxSize = postgres.getInteger("poolSize", 4);
+    int pipeliningLimit = postgres.getInteger("pipeliningLimit", 1);
 
     PgConnectOptions pgConnectOptions = new PgConnectOptions()
       .setHost(postgresHost)
@@ -126,7 +126,8 @@ public class ServerVerticle extends AbstractVerticle {
       .setUser("graphql")
       .setPassword("graphql")
       .setDatabase("blogdb")
-      .setCachePreparedStatements(true);
+      .setCachePreparedStatements(true)
+      .setPipeliningLimit(Math.max(pipeliningLimit, 1));
     PoolOptions pgPoolOptions = new PoolOptions()
       .setMaxSize(maxSize);
     pgClient = PgPool.pool(vertx, pgConnectOptions, pgPoolOptions);

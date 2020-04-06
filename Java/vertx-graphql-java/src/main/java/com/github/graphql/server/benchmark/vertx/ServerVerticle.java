@@ -72,7 +72,7 @@ public class ServerVerticle extends AbstractVerticle {
     setupPgClient(config);
 
     GraphQLHandlerOptions options = new GraphQLHandlerOptions()
-      .setWorker(true);
+      .setWorker(config.getBoolean("graphQLWorker", false));
     GraphQLHandler graphQLHandler = GraphQLHandler.create(graphQL, options)
       .dataLoaderRegistry(rc -> {
         DataLoader<Integer, JsonArray> commentDataLoader = DataLoader.newMappedDataLoader(

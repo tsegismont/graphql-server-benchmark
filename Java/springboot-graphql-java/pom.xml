@@ -37,7 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <graphql-spring-boot-starter.version>5.2</graphql-spring-boot-starter.version>
     <graphql-java-tools.version>5.6.1</graphql-java-tools.version>
-    <graphql-java.version>13.0</graphql-java.version>
+    <graphql-java.version>17.4</graphql-java.version>
   </properties>
 
   <dependencies>
